@@ -2,8 +2,10 @@
 
 import { useGetUsersQuery } from "@/lib/api/usersApi";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const UserList = () => {
+  const router = useRouter();
   const { data: users, isLoading: usersLoading } = useGetUsersQuery();
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -20,7 +22,7 @@ const UserList = () => {
           <li
             key={user.id}
             className="cursor-pointer p-1 hover:bg-gray-100"
-            onClick={() => (window.location.href = `/user/${user.id}`)}
+            onClick={() => router.push(`/user/${user.id}`)}
           >
             {user.username}
           </li>

@@ -5,15 +5,20 @@ import { useGetProductsQuery } from "@/lib/api/productsApi";
 import { useGetUsersQuery } from "@/lib/api/usersApi";
 import { Product } from "@/ts/models/product";
 import DataColumn from "./dataColumn";
+import ListItems from "./listItems";
+import { useRouter } from "next/navigation";
 
 const ProductUserSelector = () => {
+  const router = useRouter();
   const { data: products = [], isLoading: productsLoading } =
     useGetProductsQuery();
   const { data: users = [], isLoading: usersLoading } = useGetUsersQuery();
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
-  const [productSearch, setProductSearch] = useState<string>("");
-  const [userSearch, setUserSearch] = useState<string>("");
-  const [selectedSearch, setSelectedSearch] = useState<string>("");
+  const [searches, setSearches] = useState({
+    product: "",
+    user: "",
+    selected: "",
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleSelectProduct = (product: Product) => {
@@ -26,16 +31,28 @@ const ProductUserSelector = () => {
     setSelectedProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const filteredProducts = products.filter((p) =>
-    p.title.toLowerCase().includes(productSearch.toLowerCase())
-  );
+  const filterItems = <T,>(
+    items: T[],
+    search: string,
+    getField: (item: T) => string
+  ) => {
+    if (!items) return [];
+    const lowerSearch = search.toLowerCase();
+    return items.filter((item) =>
+      getField(item).toLowerCase().includes(lowerSearch)
+    );
+  };
 
-  const filteredUsers = users.filter((u) =>
-    u.username.toLowerCase().includes(userSearch.toLowerCase())
+  const filteredProducts = filterItems(
+    products,
+    searches.product,
+    (p) => p.title
   );
-
-  const filteredSelected = selectedProducts.filter((p) =>
-    p.title.toLowerCase().includes(selectedSearch.toLowerCase())
+  const filteredUsers = filterItems(users, searches.user, (u) => u.username);
+  const filteredSelected = filterItems(
+    selectedProducts,
+    searches.selected,
+    (p) => p.title
   );
 
   useEffect(() => {
@@ -49,50 +66,45 @@ const ProductUserSelector = () => {
       <DataColumn
         searchInput={{
           placeholder: "Search products...",
-          onChange: (e) => setProductSearch(e.target.value),
+          onChange: (e) =>
+            setSearches((prev) => ({ ...prev, product: e.target.value })),
         }}
       >
-        {filteredProducts.slice(0, 10).map((product) => (
-          <li
-            key={product.id}
-            onClick={() => handleSelectProduct(product)}
-            className="cursor-pointer p-1 hover:bg-gray-100"
-          >
-            {product.title}
-          </li>
-        ))}
+        <ListItems
+          items={filteredProducts || []}
+          getKey={(p) => p.id}
+          getLabel={(p) => p.title}
+          onItemClick={handleSelectProduct}
+        />
       </DataColumn>
       <DataColumn
         searchInput={{
           placeholder: "Search users...",
-          onChange: (e) => setUserSearch(e.target.value),
+          onChange: (e) =>
+            setSearches((prev) => ({ ...prev, user: e.target.value })),
         }}
       >
-        {filteredUsers.map((user) => (
-          <li
-            key={user.id}
-            className="cursor-pointer p-1 hover:bg-gray-100"
-            onClick={() => (window.location.href = `/user/${user.id}`)}
-          >
-            {user.username}
-          </li>
-        ))}
+        <ListItems
+          items={filteredUsers || []}
+          getKey={(u) => u.id}
+          getLabel={(u) => u.username}
+          onItemClick={(user) => router.push(`/user/${user.id}`)}
+        />
       </DataColumn>
       <DataColumn
         searchInput={{
           placeholder: "Search selected...",
-          onChange: (e) => setSelectedSearch(e.target.value),
+          onChange: (e) =>
+            setSearches((prev) => ({ ...prev, selected: e.target.value })),
         }}
       >
-        {filteredSelected.map((product) => (
-          <li
-            key={product.id}
-            onClick={() => handleRemoveProduct(product.id)}
-            className="cursor-pointer p-1 hover:bg-gray-100 flex items-center"
-          >
-            <span className="text-green-600 mr-2">✔️</span> {product.title}
-          </li>
-        ))}
+        <ListItems
+          items={filteredSelected}
+          getKey={(p) => p.id}
+          getLabel={(p) => p.title}
+          onItemClick={(product) => handleRemoveProduct(product.id)}
+          icon={<span className="text-green-600">✔️</span>}
+        />
       </DataColumn>
     </main>
   );

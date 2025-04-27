@@ -8,13 +8,13 @@ interface SearchProps {
 
 interface DataColumnProps {
   children: ReactNode;
-  searchInput?: SearchProps;
+  searchInput: SearchProps;
 }
 
 const DataColumn: React.FC<DataColumnProps> = ({ children, searchInput }) => {
   return (
     <div className="border rounded-lg p-2">
-      {searchInput && <SearchInput onChange={searchInput.onChange} />}
+      <SearchInput onChange={searchInput.onChange} />
       <ul>{children}</ul>
     </div>
   );
