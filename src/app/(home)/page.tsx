@@ -1,5 +1,5 @@
 import ProductUserSelector from "./_components/productUserSelector";
 
-export default function Home() {
+export default function HomePage() {
   return <ProductUserSelector />;
 }

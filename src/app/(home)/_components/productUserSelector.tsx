@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetProductsQuery } from "@/lib/api/productsApi";
 import { useGetUsersQuery } from "@/lib/api/usersApi";
 import { Product } from "@/ts/models/product";
@@ -14,6 +14,7 @@ const ProductUserSelector = () => {
   const [productSearch, setProductSearch] = useState<string>("");
   const [userSearch, setUserSearch] = useState<string>("");
   const [selectedSearch, setSelectedSearch] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const handleSelectProduct = (product: Product) => {
     if (!selectedProducts.find((p) => p.id === product.id)) {
@@ -37,11 +38,13 @@ const ProductUserSelector = () => {
     p.title.toLowerCase().includes(selectedSearch.toLowerCase())
   );
 
-  if (productsLoading || usersLoading) {
-    return <div className="text-center p-4">Loading...</div>;
-  }
+  useEffect(() => {
+    if (!usersLoading && !productsLoading) setIsLoading(false);
+  }, [usersLoading, productsLoading]);
 
-  return (
+  return isLoading ? (
+    <div className="text-center p-4">Loading...</div>
+  ) : (
     <main className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
       <DataColumn
         searchInput={{
